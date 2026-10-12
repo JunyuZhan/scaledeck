@@ -4,7 +4,9 @@ import { auth, self, type Me } from "../api/client";
 import { useI18n, type Lang } from "../i18n";
 import Notifications from "./Notifications";
 import ThemeToggle from "./ThemeToggle";
-import Logo from "./Logo";
+import BrandMark from "./BrandMark";
+import SiteFooter from "./SiteFooter";
+import { useBranding } from "./BrandingProvider";
 
 const baseNav = [
   { to: "/", key: "Overview", end: true, icon: "overview" },
@@ -18,7 +20,7 @@ const adminNav = [
   { to: "/keys", key: "Pre-auth keys", end: false, icon: "keys" },
   { to: "/policy", key: "ACL Policy", end: false, icon: "policy" },
   { to: "/events", key: "Activity log", end: false, icon: "events" },
-  { to: "/settings", key: "Mail settings", end: false, icon: "mail" },
+  { to: "/settings", key: "Settings", end: false, icon: "mail" },
 ];
 
 function Icon({ name, className = "w-5 h-5" }: { name: string; className?: string }) {
@@ -152,6 +154,7 @@ export default function Layout({
 }) {
   const navigate = useNavigate();
   const { t, lang, setLang } = useI18n();
+  const { branding } = useBranding();
   const isAdmin = me.role === "admin";
   const initials = (me.username || "?").slice(0, 2).toUpperCase();
 
@@ -217,12 +220,14 @@ export default function Layout({
       <aside className="w-64 shrink-0 bg-paper border-r border-mist flex flex-col">
         <div className="px-5 pt-6 pb-5">
           <div className="flex items-center gap-3">
-            <Logo tile size={40} />
+            <BrandMark size={40} />
             <div>
               <div className="text-ink font-semibold leading-tight">
-                Headscale
+                {branding.site_name}
               </div>
-              <div className="text-[11px] text-steel">自建 VPN 控制台</div>
+              <div className="text-[11px] text-steel">
+                {branding.slogan || "自建 VPN 控制台"}
+              </div>
             </div>
           </div>
         </div>
@@ -365,6 +370,7 @@ export default function Layout({
             <Outlet context={me} />
           </div>
         </div>
+        <SiteFooter />
       </main>
     </div>
   );

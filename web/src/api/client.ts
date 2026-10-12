@@ -3,6 +3,8 @@
 // sees the key. Authentication is a session cookie (HttpOnly) set by the
 // backend on login; we send it with credentials: "include".
 
+import type { Branding } from "../lib/branding";
+
 const PROXY_BASE = "/ui/api/proxy"; // backend strips this and calls Headscale /api/v1
 const AUTH_BASE = "/ui/api/auth";
 
@@ -370,4 +372,34 @@ export const admin = {
       method: "POST",
       body: JSON.stringify({ to }),
     }),
+  // Site branding (name / slogan / logo / footer fields). GET is public;
+  // writes are admin-only.
+  branding: () => backendFetch<Branding>("/branding"),
+  saveBranding: (b: Branding) =>
+    backendFetch<Branding>("/admin/settings/branding", {
+      method: "PUT",
+      body: JSON.stringify(b),
+    }),
+  uploadBrandingLogo: async (file: File): Promise<Branding> => {
+    const fd = new FormData();
+    fd.append("logo", file);
+    const res = await fetch("/ui/api/admin/settings/branding/logo", {
+      method: "POST",
+      body: fd,
+      credentials: "include",
+    });
+    if (!res.ok) {
+      let msg = `${res.status} ${res.statusText}`;
+      try {
+        const body = await res.json();
+        if (body?.error) msg = body.error as string;
+      } catch {
+        /* ignore non-JSON error bodies */
+      }
+      throw new Error(msg);
+    }
+    return (await res.json()) as Branding;
+  },
+  deleteBrandingLogo: () =>
+    backendFetch<Branding>("/admin/settings/branding/logo", { method: "DELETE" }),
 };

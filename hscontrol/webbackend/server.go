@@ -250,6 +250,11 @@ type Server struct {
 	mailMu sync.RWMutex
 	mail   *MailSettings
 
+	// brandingMu guards the runtime-editable site branding (name, slogan,
+	// logo, footer/ICP fields) edited from the console.
+	brandingMu sync.RWMutex
+	branding   *BrandingSettings
+
 	// SSE node-stream hub: a lightweight poller watches the node set / online
 	// state and signals every subscribed browser so the UI refreshes without a
 	// manual reload. Channels are buffered (size 1) and signalled
@@ -291,6 +296,7 @@ func NewServer(cfg *Config) (*Server, error) {
 		knownOnline:  map[string]bool{},
 		notifiedKeys: map[string]bool{},
 		mail:         &MailSettings{},
+		branding:     DefaultBranding(),
 		sseClients:   map[chan struct{}]bool{},
 		sseEvClients: map[chan []byte]bool{},
 	}
@@ -315,6 +321,9 @@ func NewServer(cfg *Config) (*Server, error) {
 	}
 	if err := s.loadMailSettings(); err != nil {
 		return nil, fmt.Errorf("loading mail settings: %w", err)
+	}
+	if err := s.loadBranding(); err != nil {
+		return nil, fmt.Errorf("loading branding: %w", err)
 	}
 	return s, nil
 }
@@ -448,6 +457,11 @@ func (s *Server) Handler() http.Handler {
 	// (created with no password). Gated by the same IP rate limit + Turnstile.
 	r.Post("/ui/api/auth/setup", s.handleSetup)
 
+	// Public, unauthenticated: site branding (name / slogan / logo / footer
+	// fields). Nothing secret — the login page needs it pre-session.
+	r.Get("/ui/api/branding", s.handleGetBranding)
+	r.Get("/ui/api/branding/logo", s.handleServeBrandingLogo)
+
 	r.Group(func(protected chi.Router) {
 		protected.Use(middlewareOf(s.withSession))
 
@@ -480,6 +494,14 @@ func (s *Server) Handler() http.Handler {
 			rt.Get("/", s.handleGetMailSettings)
 			rt.Put("/", s.handlePutMailSettings)
 			rt.Post("/test", s.handleTestMail)
+		})
+
+		// Admin-only site branding (name / slogan / logo / footer fields).
+		protected.Route("/ui/api/admin/settings/branding", func(rt chi.Router) {
+			rt.Use(middlewareOf(s.requireAdmin))
+			rt.Put("/", s.handlePutBranding)
+			rt.Post("/logo", s.handleUploadBrandingLogo)
+			rt.Delete("/logo", s.handleDeleteBrandingLogo)
 		})
 
 		// Self-service: the logged-in user's own devices + key generation.

@@ -4,6 +4,7 @@ import { auth, type Me } from "./api/client";
 import { LangProvider, useI18n } from "./i18n";
 import Layout from "./components/Layout";
 import TranslationBanner from "./components/TranslationBanner";
+import { BrandingProvider } from "./components/BrandingProvider";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Nodes from "./pages/Nodes";
@@ -73,7 +74,9 @@ function AppInner() {
 export default function App() {
   return (
     <LangProvider>
-      <AppInner />
+      <BrandingProvider>
+        <AppInner />
+      </BrandingProvider>
     </LangProvider>
   );
 }

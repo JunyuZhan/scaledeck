@@ -3,12 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { auth, type AuthConfig } from "../api/client";
 import { useI18n } from "../i18n";
 import TurnstileWidget from "../components/TurnstileWidget";
-import Logo from "../components/Logo";
+import BrandMark from "../components/BrandMark";
+import SiteFooter from "../components/SiteFooter";
 import ThemeToggle from "../components/ThemeToggle";
+import { useBranding } from "../components/BrandingProvider";
 
 export default function Login({ onLogin }: { onLogin: () => void }) {
   const { t } = useI18n();
   const navigate = useNavigate();
+  const { branding } = useBranding();
 
   const [cfg, setCfg] = useState<AuthConfig | null>(null);
   const [mode, setMode] = useState<"login" | "setup">("login");
@@ -117,44 +120,47 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
   const canSubmit = !busy && !configLoading;
 
   return (
-    <div className="min-h-full flex">
-      {/* Brand panel (Brex "carbon" surface, hidden on small screens). */}
-      <div className="hidden md:flex md:w-[46%] lg:w-1/2 bg-[color:var(--auth-panel)] text-[color:var(--auth-panel-fg)] flex-col justify-between p-12 lg:p-16">
-        <div className="flex items-center gap-3">
-          <Logo tile size={40} />
-          <span className="text-lg font-semibold tracking-heading">Headscale</span>
-          <span className="text-sm text-[color:var(--auth-panel-subtle)]">Web UI</span>
+    <div className="min-h-full flex flex-col">
+      <div className="flex-1 flex">
+        {/* Brand panel (Brex "carbon" surface, hidden on small screens). */}
+        <div className="hidden md:flex md:w-[46%] lg:w-1/2 bg-[color:var(--auth-panel)] text-[color:var(--auth-panel-fg)] flex-col justify-between p-12 lg:p-16">
+          <div className="flex items-center gap-3">
+            <BrandMark size={40} />
+            <span className="text-lg font-semibold tracking-heading">
+              {branding.site_name}
+            </span>
+          </div>
+
+          <div className="space-y-4">
+            <h1 className="text-3xl lg:text-4xl font-semibold tracking-heading leading-tight text-[color:var(--auth-panel-fg)]">
+              {mode === "setup"
+                ? t("Welcome")
+                : branding.login_headline || t("Sign in to your network console")}
+            </h1>
+            <p className="text-[15px] leading-relaxed text-[color:var(--auth-panel-muted)] max-w-md">
+              {mode === "setup"
+                ? t(
+                    "This is the first launch. Set a password for the default admin account to start using the console.",
+                  )
+                : branding.login_subtitle ||
+                  t("Secure, self-hosted Tailscale control plane")}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 text-[12px] text-[color:var(--auth-panel-muted)]">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-ember" />
+            {t("Protected by Cloudflare Turnstile")}
+          </div>
         </div>
 
-        <div className="space-y-4">
-          <h1 className="text-3xl lg:text-4xl font-semibold tracking-heading leading-tight text-[color:var(--auth-panel-fg)]">
-            {mode === "setup"
-              ? t("Welcome")
-              : t("Sign in to your network console")}
-          </h1>
-          <p className="text-[15px] leading-relaxed text-[color:var(--auth-panel-muted)] max-w-md">
-            {mode === "setup"
-              ? t(
-                  "This is the first launch. Set a password for the default admin account to start using the console.",
-                )
-              : t("Secure, self-hosted Tailscale control plane")}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 text-[12px] text-[color:var(--auth-panel-muted)]">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-ember" />
-          {t("Protected by Cloudflare Turnstile")}
-        </div>
-      </div>
-
-      {/* Form panel. */}
-      <div className="flex-1 flex items-center justify-center bg-fog p-6 relative">
-        {/* Theme switch — the login page has no app shell, so it needs its own
-            control (otherwise the theme is locked to system/localStorage). */}
-        <div className="absolute top-5 right-5 md:top-8 md:right-8">
-          <ThemeToggle />
-        </div>
-        {mode === "setup" ? (
+        {/* Form panel. */}
+        <div className="flex-1 flex items-center justify-center bg-fog p-6 relative">
+          {/* Theme switch — the login page has no app shell, so it needs its own
+              control (otherwise the theme is locked to system/localStorage). */}
+          <div className="absolute top-5 right-5 md:top-8 md:right-8">
+            <ThemeToggle />
+          </div>
+          {mode === "setup" ? (
           <form
             onSubmit={submitSetup}
             className="w-full max-w-[400px] bg-paper border border-mist rounded-2xl p-8 space-y-6 shadow-[var(--shadow-card)]"
@@ -240,9 +246,10 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
           >
             {/* Compact brand mark for small screens (panel hidden there). */}
             <div className="flex md:hidden items-center gap-3 mb-2">
-              <Logo tile size={36} />
+              <BrandMark size={36} />
               <span className="text-base font-semibold tracking-heading">
-                Headscale · Web UI
+                {branding.site_name}
+                {branding.slogan ? ` · ${branding.slogan}` : ""}
               </span>
             </div>
 
@@ -298,7 +305,9 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
             </button>
           </form>
         )}
+        </div>
       </div>
+      <SiteFooter />
     </div>
   );
 }

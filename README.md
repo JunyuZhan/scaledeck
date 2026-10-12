@@ -32,6 +32,16 @@ ScaleDeck 把 [Headscale](https://github.com/juanfont/headscale)（开源自托�
 
 ---
 
+## 在线演示
+
+想直接看效果？无需安装，打开 **[在线演示站点](https://junyuzhan.github.io/scaledeck/)** 即可体验完整的 Web 控制台——前端纯内存 Mock，所有数据均为模拟，不会连接任何真实服务器。
+
+- 演示账号：**`demo`** ／ 演示密码：**`demo`**（登录框已预填，直接点「登录」即可进入）。
+- 数据为内存模拟，**刷新页面即重置**，不持久化、不留痕。
+- 源码在 [`demo` 分支](https://github.com/JunyuZhan/scaledeck/tree/demo)，由 GitHub Actions 自动构建并发布到 GitHub Pages。
+
+---
+
 ## 界面预览
 
 > 以下均为项目真实界面截图（演示数据）。

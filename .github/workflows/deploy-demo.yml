@@ -1,18 +1,16 @@
 name: Deploy demo to GitHub Pages
 
 # Builds the ScaleDeck web UI with the in-browser mock backend (VITE_DEMO=1) and
-# publishes the static bundle to GitHub Pages. Runs on every push to `demo`.
+# publishes the static bundle to the `gh-pages` branch, which GitHub Pages
+# serves. Runs on every push to `demo`.
 on:
   push:
     branches: [demo]
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write # needed to push the built site to the gh-pages branch
 
-# Allow one concurrent deployment; cancel in-progress runs on new pushes.
 concurrency:
   group: pages-demo
   cancel-in-progress: true
@@ -37,24 +35,11 @@ jobs:
         working-directory: web
         run: VITE_DEMO=1 npm run build
 
-      - name: Disable Jekyll
-        run: touch hscontrol/webui/dist/.nojekyll
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Publish to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: hscontrol/webui/dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: hscontrol/webui/dist
+          publish_branch: gh-pages
+          enable_jekyll: false # ship the static SPA as-is
+          force_orphan: true

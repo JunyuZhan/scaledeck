@@ -6,6 +6,7 @@ import Notifications from "./Notifications";
 import ThemeToggle from "./ThemeToggle";
 import BrandMark from "./BrandMark";
 import SiteFooter from "./SiteFooter";
+import DemoBanner from "./DemoBanner";
 import { useBranding } from "./BrandingProvider";
 
 const baseNav = [
@@ -216,7 +217,9 @@ export default function Layout({
   };
 
   return (
-    <div className="flex h-full bg-paper">
+    <div className="flex flex-col h-full bg-paper">
+      <DemoBanner />
+      <div className="flex flex-1 min-h-0">
       <aside className="w-64 shrink-0 bg-paper border-r border-mist flex flex-col">
         <div className="px-5 pt-6 pb-5">
           <div className="flex items-center gap-3">
@@ -372,6 +375,7 @@ export default function Layout({
         </div>
         <SiteFooter />
       </main>
+      </div>
     </div>
   );
 }

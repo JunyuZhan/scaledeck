@@ -8,6 +8,8 @@ import SiteFooter from "../components/SiteFooter";
 import ThemeToggle from "../components/ThemeToggle";
 import { useBranding } from "../components/BrandingProvider";
 
+const DEMO = import.meta.env.VITE_DEMO === "1";
+
 export default function Login({ onLogin }: { onLogin: () => void }) {
   const { t } = useI18n();
   const navigate = useNavigate();
@@ -16,9 +18,9 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
   const [cfg, setCfg] = useState<AuthConfig | null>(null);
   const [mode, setMode] = useState<"login" | "setup">("login");
 
-  // Login form state.
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  // Login form state. In the public demo the credentials are pre-filled.
+  const [username, setUsername] = useState(DEMO ? "demo" : "");
+  const [password, setPassword] = useState(DEMO ? "demo" : "");
 
   // Setup form state (first-run default admin).
   const [setupUser, setSetupUser] = useState("admin");
@@ -252,6 +254,14 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
                 {branding.slogan ? ` · ${branding.slogan}` : ""}
               </span>
             </div>
+
+            {DEMO && (
+              <div className="text-[12px] leading-relaxed text-steel bg-fog border border-mist rounded-xl px-3 py-2">
+                演示环境：账号已预填为 <span className="font-medium text-ink">demo</span> /
+                <span className="font-medium text-ink"> demo</span>，直接点击「登录」即可进入。
+                所有数据均为模拟数据，刷新后重置。
+              </div>
+            )}
 
             <div className="space-y-1.5">
               <label className="text-[13px] text-graphite">用户名</label>

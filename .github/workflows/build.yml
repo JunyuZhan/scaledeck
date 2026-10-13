@@ -18,8 +18,34 @@ permissions:
   contents: read
 
 jobs:
+  build-web:
+    name: Web console
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      # `npm run build` = tsc --noEmit && vite build, outputting to
+      # hscontrol/webui/dist (and restoring dist/.gitkeep, which vite build
+      # wipes along with the rest of dist/).
+      - run: npm ci
+      - run: npm run build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: webui-dist
+          path: hscontrol/webui/dist
+
   build-go:
     name: "Go · ${{ matrix.GOOS }}/${{ matrix.GOARCH }}"
+    needs: build-web
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -36,6 +62,17 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      # hscontrol/webui/embed.go embeds hscontrol/webui/dist, which is not
+      # committed: only a .gitkeep placeholder is tracked, and go:embed skips
+      # dot files. Without the frontend built first, `go build` dies with
+      # "cannot embed directory dist: contains no embeddable files". `make
+      # build` hides this behind its dependency on the `web` target; CI has to
+      # do the same. Build the SPA once and share it across the matrix.
+      - uses: actions/download-artifact@v4
+        with:
+          name: webui-dist
+          path: hscontrol/webui/dist
+
       - name: Cross compile
         env:
           CGO_ENABLED: "0"
@@ -47,27 +84,3 @@ jobs:
         with:
           name: headscale-${{ matrix.GOOS }}-${{ matrix.GOARCH }}
           path: headscale
-
-  build-web:
-    name: Web console
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: web
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-
-      # `npm run build` = tsc --noEmit && vite build (and restores dist/.gitkeep,
-      # which vite build wipes along with the rest of dist/).
-      - run: npm ci
-      - run: npm run build
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: webui-dist
-          path: hscontrol/webui/dist
